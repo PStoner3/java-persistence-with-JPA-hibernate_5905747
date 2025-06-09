@@ -1,10 +1,3 @@
-/**
- * This file is part of MyCompany's Book Management System.
- * It defines the BookType entity which represents a type of book in the system.
- * The BookType entity is identified by a composite key consisting of typeCode and typeSubCode.
- * It includes fields for the type's code, subcode, and name.
- * The entity is mapped to the "book_type" table in the database.
- */
 package com.mycompany.app.entities;
 
 import com.mycompany.app.entities.keys.BookTypeKey;
@@ -13,15 +6,37 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
+// Named queries for the BookType entity
+@NamedQueries({
+    @NamedQuery(name = "BookType.findAll", query = "SELECT b FROM BookType b"),
+    @NamedQuery(name = "BookType.findBySubcodeAndName", query = "SELECT b FROM BookType b WHERE b.subCode = :subCode AND b.name LIKE :name"),
+})
 
+/**
+ * Represents a type of book in the library system.
+ * This entity is identified by a composite key consisting of type code and type
+ * subcode.
+ * The type code and subcode together uniquely identify a book type.
+ * 
+ * This class is mapped to the "book_type" table in the database.
+ * It contains fields for the type code, type subcode, and type name.
+ * The type code and subcode are used as the primary key for this entity.
+ * The type name is a descriptive name for the book type.
+ * 
+ * The class overrides the equals and hashCode methods to ensure that two
+ * BookType objects are considered equal if their type code and subcode are the
+ * same.
+ * The toString method provides a string representation of the BookType object.
+ */
 @Entity
 @Table(name = "book_type")
 @IdClass(BookTypeKey.class)
-// The BookTypeKey class should implement Serializable and define the composite key fields
 public class BookType {
-  
+
   @Id
   @Column(name = "type_code", nullable = false)
   private String code;

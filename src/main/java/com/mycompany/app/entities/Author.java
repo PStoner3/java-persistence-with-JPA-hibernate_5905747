@@ -83,4 +83,9 @@ public class Author {
   public void setAddress(Address address) {
     this.address = address;
   }
+
+  @Override
+  public String toString() {
+    return "Author [id=" + id + ", name=" + name + ", address=" + address + "]";
+  }
 }

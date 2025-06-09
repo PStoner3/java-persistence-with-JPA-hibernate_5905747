@@ -1,8 +1,10 @@
 package com.mycompany.app;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 
+import com.mycompany.app.dto.BooksAndAuthors;
 import com.mycompany.app.entities.Address;
 import com.mycompany.app.entities.Author;
 import com.mycompany.app.entities.Book;
@@ -26,6 +28,7 @@ import com.mycompany.app.entities.keys.ItemKey;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
+import jakarta.persistence.TypedQuery;
 
 /**
  * This application introduces basic concepts of using an ORM, in this case
@@ -235,6 +238,11 @@ public class Main {
       // tablePerClassStrategy(emf);
       // compositionWithAssociation(emf);
       // compositionWithEmbedable(emf);
+      // writeJpqlQuery(emf);
+      // writeTypedQueryJqpl(emf);
+      // writeJqplWithWhere(emf);
+      // writeJpqlJoin(emf);
+      writeJpqlWithNamedQuery(emf);
     }
   }
 
@@ -524,17 +532,6 @@ public class Main {
   // is intentionally not used in the current context, but it can be uncommented
   // in the main method to execute it and see the results.
   @SuppressWarnings("unused")
-  // Note: The code for creating BookType and Item entities with composite keys
-  // is commented out. Uncomment the relevant sections to create these entities.
-  // Ensure that the BookType and Item classes are properly defined with
-  // composite key annotations and that the ItemKey class is defined with the
-  // appropriate composite key annotations as well.
-  // The BookType class should have fields for code, subCode, and name,
-  // and the Item class should have a field for id of type ItemKey,
-  // which should be a composite key class with fields for code and number.
-  // The ItemKey class should be defined with the appropriate annotations for
-  // composite keys, such as @Embeddable and @EmbeddedId, to ensure that JPA
-  // recognizes it as a composite key class.
   private static void createEntityWithCompositeKey(EntityManagerFactory emf) {
     EntityManager em = emf.createEntityManager();
 
@@ -949,7 +946,8 @@ public class Main {
   // the creation of a composition relationship with an embeddable entity in a JPA
   // context.
   // It is a basic example of how to use JPA to create and persist entities with
-  // a composition relationship using an embeddable entity in a relational database
+  // a composition relationship using an embeddable entity in a relational
+  // database
   // using Hibernate as the JPA provider.
   // The method is annotated with @SuppressWarnings("unused") to indicate that it
   // is intentionally not used in the current context, but it can be uncommented
@@ -1002,6 +1000,236 @@ public class Main {
       // ensuring that the entities are saved to the database.
       em.persist(author);
 
+      em.getTransaction().commit();
+    }
+  }
+
+  /**
+   * This method demonstrates how to write a JPQL query
+   * to retrieve all BookType entities from the database.
+   * 
+   * @param emf
+   */
+  // This method uses the EntityManager to create a JPQL query that retrieves
+  // all BookType entities from the database. It executes the query and prints
+  // the results to the console. The method is designed to be called from the
+  // main method to demonstrate the use of JPQL queries in a JPA context.
+  // It is a basic example of how to use JPA to perform queries in a relational
+  // database using Hibernate as the JPA provider.
+  @SuppressWarnings("unused")
+  private static void writeJpqlQuery(EntityManagerFactory emf) {
+    try (EntityManager em = emf.createEntityManager()) {
+      em.getTransaction().begin();
+
+      // Example JPQL query to find all books
+      List<BookType> bookTypes = em.createQuery("SELECT bt FROM BookType bt", BookType.class).getResultList();
+      for (BookType bookType : bookTypes) {
+        System.out.println(bookType);
+      }
+
+      em.getTransaction().commit();
+    }
+  }
+
+  /**
+   * This method demonstrates how to write a typed JPQL query
+   * to retrieve all BookType entities from the database.
+   * It uses the TypedQuery interface to ensure type safety.
+   * 
+   * @param emf
+   */
+  // This method uses the EntityManager to create a typed JPQL query that
+  // retrieves
+  // all BookType entities from the database. It uses the TypedQuery interface
+  // to ensure type safety, allowing the results to be directly cast to the
+  // BookType class. The method executes the query and prints the results to the
+  // console. The method is designed to be called from the main method to
+  // demonstrate the use of typed JPQL queries in a JPA context.
+  // It is a basic example of how to use JPA to perform typed queries in a
+  // relational database using Hibernate as the JPA provider.
+  @SuppressWarnings("unused")
+  private static void writeTypedQueryJqpl(EntityManagerFactory emf) {
+    try (EntityManager em = emf.createEntityManager()) {
+      em.getTransaction().begin();
+
+      // Example typed JPQL query to find all books
+      TypedQuery<BookType> query = em.createQuery("SELECT bt FROM BookType bt", BookType.class);
+      List<BookType> bookTypes = query.getResultList();
+      for (BookType bookType : bookTypes) {
+        System.out.println(bookType);
+      }
+
+      em.getTransaction().commit();
+    }
+  }
+
+  /**
+   * This method demonstrates how to use JPQL with a WHERE clause
+   * to filter results based on specific criteria.
+   * It retrieves BookType entities where the subCode matches a specific value
+   * and the name contains a specific substring.
+   * 
+   * @param emf
+   */
+  // This method uses the EntityManager to create a JPQL query that retrieves
+  // BookType entities based on specific criteria using a WHERE clause.
+  // It executes the query with parameters and prints the results to the console.
+  // The method is designed to be called from the main method to demonstrate
+  // the use of JPQL with a WHERE clause in a JPA context.
+  // It is a basic example of how to use JPA to perform filtered queries in a
+  // relational database using Hibernate as the JPA provider.
+  @SuppressWarnings("unused")
+  private static void writeJqplWithWhere(EntityManagerFactory emf) {
+    try (EntityManager em = emf.createEntityManager()) {
+      em.getTransaction().begin();
+
+      // Example typed JPQL query to find all books
+      TypedQuery<BookType> query = em.createQuery(
+          "SELECT bt FROM BookType bt where bt.subCode = :subCode and bt.name like :name",
+          BookType.class);
+      query.setParameter("subCode", "SC001");
+      query.setParameter("name", "%Fiction%");
+
+      List<BookType> bookTypes = query.getResultList();
+      for (BookType bookType : bookTypes) {
+        System.out.println(bookType);
+      }
+
+      em.getTransaction().commit();
+    }
+  }
+
+  /**
+   * This method demonstrates how to use JPQL to perform joins
+   * between entities and retrieve specific fields into a DTO.
+   * It includes both INNER JOIN and LEFT JOIN examples.
+   * 
+   * @param emf
+   */
+  // This method uses the EntityManager to create a JPQL query that joins
+  // the Book and Author entities, selecting specific fields into a DTO
+  // called BooksAndAuthors.
+  // The INNER JOIN retrieves books with their associated authors,
+  // while the LEFT JOIN retrieves all books, including those without
+  // associated authors.
+  // The method is designed to be called from the main method to demonstrate
+  // the use of JPQL joins in a JPA context.
+  // It is a basic example of how to use JPA to perform joins between
+  // entities and retrieve specific fields into a DTO in a relational database
+  // using Hibernate as the JPA provider.
+  @SuppressWarnings("unused")
+  private static void writeJpqlJoin(EntityManagerFactory emf) {
+    try (EntityManager em = emf.createEntityManager()) {
+      em.getTransaction().begin();
+
+      String jpql = """
+            SELECT NEW com.mycompany.app.dto.BooksAndAuthors(book, author, address)
+            FROM Book book
+            INNER JOIN book.author author
+          """;
+
+      // Example typed JPQL query joining Book and Author entities
+      // and selecting specific fields into a DTO
+      // The query uses an INNER JOIN to retrieve books with their associated authors.
+      // The BooksAndAuthors DTO is used to encapsulate the book, author, and address
+      // information.
+      // The query is executed using a TypedQuery to ensure type safety.
+      // The result is a list of BooksAndAuthors objects, each containing the book,
+      // author, and address information.
+      TypedQuery<BooksAndAuthors> query = em.createQuery(jpql, BooksAndAuthors.class);
+      List<BooksAndAuthors> books = query.getResultList();
+
+      // Print the results of the query
+      // The results are printed to the console, showing the book name, author name,
+      // and address information for each book-author pair.
+      // The output will display the book name, author name, and address for each
+      // book-author pair retrieved from the database.
+      System.out.println("Books and Authors (Using INNER Join):");
+      for (BooksAndAuthors book : books) {
+        System.out.println(book.book().getName() + " " + book.author().getName() + " " + book.address());
+      }
+
+      jpql = """
+            SELECT NEW com.mycompany.app.dto.BooksAndAuthors(book, author, address)
+            FROM Book book
+            LEFT JOIN book.author author
+          """;
+
+      // Example typed JPQL query joining Book and Author entities
+      // and selecting specific fields into a DTO
+      // The query uses a LEFT JOIN to retrieve all books, including those without
+      // associated authors.
+      // The BooksAndAuthors DTO is used to encapsulate the book, author, and address
+      // information.
+      // The query is executed using a TypedQuery to ensure type safety.
+      // The result is a list of BooksAndAuthors objects, each containing the book,
+      // author, and address information.
+      // The LEFT JOIN ensures that all books are included in the result, even if they
+      // do not have an associated author.
+      // The result is a list of BooksAndAuthors objects, each containing the book,
+      // author, and address information.onsole, showing the book name, author name,
+      query = null;
+      query = em.createQuery(jpql, BooksAndAuthors.class);
+      books = null;
+      books = query.getResultList();
+
+      // Print the results of the query
+      // The results are printed to the console, showing the book name, author name,
+      // and address information for each book-author pair.
+      // The output will display the book name, author name, and address for each
+      // book-author pair retrieved from the database, including books without
+      // associated authors.
+      System.out.println("Books and Authors (Using LEFT Join):");
+      for (BooksAndAuthors book : books) {
+        System.out.println(book.book().getName() + " " + (book.author() == null ? null : book.author().getName()) + " "
+            + (book.address() == null ? null
+                : book.address().getStreet()
+                    + " " + book.address().getCity() + " " + book.address().getPostalCode()));
+      }
+
+      em.getTransaction().commit();
+    }
+  }
+
+  /**
+   * This method demonstrates how to use a named query
+   * to retrieve all BookType entities from the database.
+   * Named queries are defined in the entity class using the @NamedQuery
+   * annotation.
+   * 
+   * @param emf
+   */
+  // This method uses the EntityManager to create a named query that retrieves
+  // all BookType entities from the database. Named queries are defined in the
+  // entity class using the @NamedQuery annotation, allowing for reusable and
+  // type-safe queries. The method executes the named query and prints the results
+  // to the console. The method is designed to be called from the main method to
+  // demonstrate the use of named queries in a JPA context.
+  // It is a basic example of how to use JPA to perform named queries in a
+  // relational database using Hibernate as the JPA provider.
+  @SuppressWarnings("unused")
+  private static void writeJpqlWithNamedQuery(EntityManagerFactory emf) {
+    try (EntityManager em = emf.createEntityManager()) {
+      em.getTransaction().begin();
+
+      // Example of using a named query to find all BookType entities
+      TypedQuery<BookType> query = em.createNamedQuery("BookType.findAll", BookType.class);
+      List<BookType> bookTypes = query.getResultList();
+      for (BookType bookType : bookTypes) {
+        System.out.println(bookType);
+      }
+
+      // Example of using a named query with parameters to find BookType entities
+      // with a specific subCode and name pattern
+      query = em.createNamedQuery("BookType.findBySubcodeAndName", BookType.class);
+
+      query.setParameter("subCode", "SC002");
+      query.setParameter("name", "%Fiction%");
+
+      bookTypes = query.getResultList();
+      for (BookType bookType : bookTypes) {
+        System.out.println(bookType);
+      }
       em.getTransaction().commit();
     }
   }
