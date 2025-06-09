@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -14,10 +16,13 @@ public class Review {
   @Column(name = "review_id", nullable = false)
   private int id;
 
-  @Column(name = "teacher_id")
-  private int teacherId;
-
   private String comment;
+
+  private int rating;
+
+  @ManyToOne
+  @JoinColumn(name = "teacher_id")
+  private Teacher teacher;
 
   public int getId() {
     return id;
@@ -27,12 +32,12 @@ public class Review {
     this.id = id;
   }
 
-  public int getTeacherId() {
-    return teacherId;
+  public Teacher getTeacherId() {
+    return teacher;
   }
 
-  public void setTeacherId(int teacherId) {
-    this.teacherId = teacherId;
+  public void setTeacherId(Teacher teacher) {
+    this.teacher = teacher;
   }
 
   public String getComment() {
@@ -51,5 +56,17 @@ public class Review {
     this.rating = rating;
   }
 
-  private int rating;
+  /**
+   * @return the teacher
+   */
+  public Teacher getTeacher() {
+    return teacher;
+  }
+
+  /**
+   * @param teacher the teacher to set
+   */
+  public void setTeacher(Teacher teacher) {
+    this.teacher = teacher;
+  }
 }
