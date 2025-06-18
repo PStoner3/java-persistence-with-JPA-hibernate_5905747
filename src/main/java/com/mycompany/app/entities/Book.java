@@ -9,9 +9,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+
+@NamedQueries({
+    @NamedQuery(name = "Book.findAll", query = "SELECT b FROM Book b"),
+    @NamedQuery(name = "Book.findCountByAuthor", query = "SELECT COUNT(b) FROM Book b WHERE b.author.name = :name"),
+    @NamedQuery(name = "Book.findTotalPriceByAuthor", query = "SELECT SUM(b.price) FROM Book b where b.author.name = :name")
+})
 
 @Entity
 @Table(name = "book")
@@ -24,7 +32,9 @@ public class Book {
 
   @Column(name = "book_name")
   private String name;
+
   private String isbn;
+  private Double price;
 
   @OneToOne
   @JoinColumn(name = "author_id")
@@ -73,8 +83,17 @@ public class Book {
     this.reviews = reviews;
   }
 
+  public Double getPrice() {
+    return price;
+  }
+
+  public void setPrice(Double price) {
+    this.price = price;
+  }
+
   @Override
   public String toString() {
-    return "Book [id=" + id + ", name=" + name + ", isbn=" + isbn + ", author=" + author + "]";
-  }
+    return "Book [id=" + id + ", name=" + name + ", isbn=" + isbn + ", price=" + price + ", author=" + author
+        + ", reviews=" + reviews + "]";
+  }  
 }

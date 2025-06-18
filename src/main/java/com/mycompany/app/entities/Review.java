@@ -6,7 +6,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedQueries;
 import jakarta.persistence.Table;
+
+@NamedQueries({
+    @NamedQuery(name = "Review.findMinRatingByBookName", query = "SELECT MIN(r.rating) FROM Review r WHERE r.book.name = :name"),
+    @NamedQuery(name = "Review.findMaxRatingByBookName", query = "SELECT MAX(r.rating) FROM Review r WHERE r.book.name = :name"),
+    @NamedQuery(name = "Review.findAvgRatingByBookName", query = "SELECT AVG(r.rating) FROM Review r WHERE r.book.name = :name")
+})
 
 @Entity
 @Table(name = "review")
@@ -21,6 +29,8 @@ public class Review {
   @ManyToOne
   @JoinColumn(name = "book_id")
   private Book book;
+
+  private int rating;
 
   public int getId() {
     return id;
@@ -46,36 +56,16 @@ public class Review {
     this.book = book;
   }
 
+  public int getRating() {
+    return rating;
+  }
+
+  public void setRating(int rating) {
+    this.rating = rating;
+  }
+
   @Override
   public String toString() {
     return "Review [id=" + id + ", comment=" + comment + "]";
-  }
-
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + id;
-    result = prime * result + ((comment == null) ? 0 : comment.hashCode());
-    return result;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    Review other = (Review) obj;
-    if (id != other.id)
-      return false;
-    if (comment == null) {
-      if (other.comment != null)
-        return false;
-    } else if (!comment.equals(other.comment))
-      return false;
-    return true;
   }
 }
