@@ -1,5 +1,6 @@
 package com.mycompany.app;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -23,6 +24,8 @@ import com.mycompany.app.entities.Teacher;
 import com.mycompany.app.entities.Teacher2;
 import com.mycompany.app.entities.User;
 import com.mycompany.app.entities.keys.ItemKey;
+import com.mycompany.app.repositories.BookRepository;
+import com.mycompany.app.repositories.BookRepositoryImpl;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -228,34 +231,38 @@ import jakarta.persistence.criteria.Root;
  * This may seem counterintuitive to use a transaction for a read-only
  * query. However, doind so provides several important considerations:
  * 1. Ensuring data consistency and isolation during the query execution by:
- *    - Preventing inconsistent reads:
- *        - The transaction ensures that the query sees a consistent snapshot of
- *           the database at the time the transaction started, even in concurrent
- *           environments.
- *    - Isolation levels:
- *        - The transaction can be configured with different isolation levels to
- *          control how concurrent transactions interact with each other.
- *        - ACID properties:
- *            - The transaction ensures that the query execution adheres to the ACID
- *              properties (Atomicity, Consistency, Isolation, Durability) of the
- *              database.
+ * - Preventing inconsistent reads:
+ * - The transaction ensures that the query sees a consistent snapshot of
+ * the database at the time the transaction started, even in concurrent
+ * environments.
+ * - Isolation levels:
+ * - The transaction can be configured with different isolation levels to
+ * control how concurrent transactions interact with each other.
+ * - ACID properties:
+ * - The transaction ensures that the query execution adheres to the ACID
+ * properties (Atomicity, Consistency, Isolation, Durability) of the
+ * database.
  * 2. Performance optimization with `readOnly = true`:
- *    - Hint for optimization:
- *        - The `readOnly = true` marking tells the persistence provider, pp, (i.e.
- *          Hibernate) and the database no modifications will be made to the data.
- *    - Reduced overhead:
- *        - This hint informs the pp to skip steps like tracking changes to entities
- *        - Database oprtinization:
- *            - Database will often apply vendor specific optimizations for read-only
- *              transactions, such as reducing locking overhead.
+ * - Hint for optimization:
+ * - The `readOnly = true` marking tells the persistence provider, pp, (i.e.
+ * Hibernate) and the database no modifications will be made to the data.
+ * - Reduced overhead:
+ * - This hint informs the pp to skip steps like tracking changes to entities
+ * - Database oprtinization:
+ * - Database will often apply vendor specific optimizations for read-only
+ * transactions, such as reducing locking overhead.
  * 
  * <p>
  * One can read about more of the performance and management enhancements at
  * these resources:
- *    - https://www.geeksforgeeks.org/using-transactions-for-read-only-operations-in-spring-boot/#:~:text=In%20a%20Spring%20application%2C%20the,Transaction%20Management%20Using%20@Transactional%20Annotation
- *    - https://stackoverflow.com/questions/6855878/is-there-ever-a-reason-to-use-a-database-transaction-for-read-only-sql-statement
- *    - https://medium.com/@AlexanderObregon/the-mechanics-behind-how-spring-boot-handles-read-only-transactions-for-optimized-database-access-5302051b3934#:~:text=If%20the%20database%20supports%20read%2Donly%20transactions%2C%20it%20may%20also,while%20cutting%20out%20unnecessary%20work.
- * and other by asking google: jpa why use transaction when executing an aggregation query.
+ * -
+ * https://www.geeksforgeeks.org/using-transactions-for-read-only-operations-in-spring-boot/#:~:text=In%20a%20Spring%20application%2C%20the,Transaction%20Management%20Using%20@Transactional%20Annotation
+ * -
+ * https://stackoverflow.com/questions/6855878/is-there-ever-a-reason-to-use-a-database-transaction-for-read-only-sql-statement
+ * -
+ * https://medium.com/@AlexanderObregon/the-mechanics-behind-how-spring-boot-handles-read-only-transactions-for-optimized-database-access-5302051b3934#:~:text=If%20the%20database%20supports%20read%2Donly%20transactions%2C%20it%20may%20also,while%20cutting%20out%20unnecessary%20work.
+ * and other by asking google: jpa why use transaction when executing an
+ * aggregation query.
  * 
  * <p>
  * This will become our standard as we move towards using ORM in our
@@ -264,7 +271,7 @@ import jakarta.persistence.criteria.Root;
  */
 
 public class Main {
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
 
     try (EntityManagerFactory emf = Persistence.createEntityManagerFactory("library_persistence_unit")) {
       // Uncomment the method calls below to test different functionalities
@@ -295,7 +302,8 @@ public class Main {
       // groupByClause(emf);
       // havingClause(emf);
       // nativeQueries(emf);
-      criteriaQueries(emf);
+      // criteriaQueries(emf);
+      useRepository(emf);
     }
   }
 
@@ -1299,7 +1307,8 @@ public class Main {
   // calculations on entity attributes. It executes the queries and prints the
   // results to the console. The method is designed to be called from the main
   // method to demonstrate the use of aggregate functions in a JPA context.
-  // It is a basic example of how to use JPA to perform aggregate calculations in a
+  // It is a basic example of how to use JPA to perform aggregate calculations in
+  // a
   // relational database using Hibernate as the JPA provider.
   @SuppressWarnings("unused")
   private static void aggregateFunctions(EntityManagerFactory emf) {
@@ -1386,7 +1395,7 @@ public class Main {
       query3.setParameter("name", "Book1");
       rating = query3.getSingleResult();
       System.out.println("Min rating of Book for Author (using named query): " + rating);
-      
+
       // -- MAX function use as presented in lesson 07_04 --
       // This query retrieves the maximum rating of a book written by an author
       // with the name "Book1".
@@ -1446,7 +1455,7 @@ public class Main {
   /**
    * This method demonstrates how to use the ORDER BY clause
    * in JPQL to sort the results of a query.
-   * It includes examples of ordering by author name in both ascending 
+   * It includes examples of ordering by author name in both ascending
    * and descending order.
    * 
    * @param emf
@@ -1468,7 +1477,7 @@ public class Main {
           Book b LEFT JOIN b.author a
           ORDER BY author.name
           """;
-      
+
       TypedQuery<BooksAndAuthors> query = em.createQuery(jpql, BooksAndAuthors.class);
       List<BooksAndAuthors> result = query.getResultList();
 
@@ -1489,7 +1498,7 @@ public class Main {
       System.out.println("Books and Authors (Ordered by Author Name Descending):");
       for (BooksAndAuthors r : result) {
         System.out.println(r.author() + " " + r.book());
-      }      
+      }
 
       em.getTransaction().commit();
     }
@@ -1506,8 +1515,10 @@ public class Main {
   // This method uses the EntityManager to create JPQL queries that utilize
   // the GROUP BY clause to group results based on specific attributes.
   // It executes the queries and prints the results to the console. The method is
-  // designed to be called from the main method to demonstrate the use of the GROUP
-  // BY clause in a JPA context. It is a basic example of how to use JPA to perform
+  // designed to be called from the main method to demonstrate the use of the
+  // GROUP
+  // BY clause in a JPA context. It is a basic example of how to use JPA to
+  // perform
   // grouped queries in a relational database using Hibernate as the JPA provider.
   @SuppressWarnings("unused")
   private static void groupByClause(EntityManagerFactory emf) {
@@ -1523,12 +1534,13 @@ public class Main {
 
       // Create a typed query to retrieve average ratings by book name
       // This query groups the reviews by book name and calculates the average rating
-      // for each book. The result is a list of Object arrays, where each array contains
+      // for each book. The result is a list of Object arrays, where each array
+      // contains
       // the book name and its corresponding average rating.
       TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
       System.out.println("Average ratings by book name:");
       query.getResultList().forEach(o -> System.out.println("Average rating by book " + o[0] + " " + o[1]));
-      
+
       jpql = """
           SELECT r.book.name, AVG(r.rating) FROM
           Review r
@@ -1536,8 +1548,10 @@ public class Main {
           """;
 
       // Create a typed query to retrieve average ratings by author name
-      // This query groups the reviews by author name and calculates the average rating
-      // for each author. The result is a list of Object arrays, where each array contains
+      // This query groups the reviews by author name and calculates the average
+      // rating
+      // for each author. The result is a list of Object arrays, where each array
+      // contains
       // the author name and its corresponding average rating.
       query = em.createQuery(jpql, Object[].class);
       System.out.println("Average ratings by author name:");
@@ -1569,14 +1583,16 @@ public class Main {
 
       // Example of using HAVING clause in JPQL
       String jpql = """
-          SELECT r.book.author.name, AVG(r.rating) 
+          SELECT r.book.author.name, AVG(r.rating)
           FROM Review r
           GROUP BY r.book.author.name
           HAVING AVG(r.rating) > 3
           """;
 
-      // Create a typed query to retrieve authors with average ratings greater than 3.0
-      // This query groups the reviews by author name and filters the results to include
+      // Create a typed query to retrieve authors with average ratings greater than
+      // 3.0
+      // This query groups the reviews by author name and filters the results to
+      // include
       // only those authors whose average rating is greater than 3.0. The result is
       // a list of author names.
       System.out.println("Authors with average rating greater than 3:");
@@ -1595,13 +1611,16 @@ public class Main {
    * 
    * @param emf
    */
-  // This method uses the EntityManager to create a native SQL query that retrieves
-  // entities directly from the database. It executes the query and prints the results
+  // This method uses the EntityManager to create a native SQL query that
+  // retrieves
+  // entities directly from the database. It executes the query and prints the
+  // results
   // to the console. The method is designed to be called from the main method to
   // demonstrate the use of native SQL queries in a JPA context. It is a basic
-  // example of how to use JPA to perform native SQL queries in a relational database
+  // example of how to use JPA to perform native SQL queries in a relational
+  // database
   // using Hibernate as the JPA provider.
-  @SuppressWarnings({"unused", "unchecked"})
+  @SuppressWarnings({ "unused", "unchecked" })
   private static void nativeQueries(EntityManagerFactory emf) {
     try (EntityManager em = emf.createEntityManager()) {
       em.getTransaction().begin();
@@ -1655,7 +1674,8 @@ public class Main {
       // The CriteriaQuery represents a query that can be executed to retrieve
       // entities from the database. It is a type-safe representation of a query,
       // allowing for dynamic query construction and execution.
-      // The CriteriaQuery is created using the CriteriaBuilder, which provides methods
+      // The CriteriaQuery is created using the CriteriaBuilder, which provides
+      // methods
       // to construct queries in a type-safe manner.
       // The CriteriaQuery is parameterized with the type of entity to be retrieved,
       // in this case, BookType. This allows the query to be executed and return a
@@ -1664,7 +1684,7 @@ public class Main {
       // the selection of entities, the conditions for filtering, and the ordering of
       // results.
       CriteriaQuery<BookType> cq = b.createQuery(BookType.class);
-      
+
       // Create a root for the BookType entity
       // The Root represents the entity type in the query and is used to define
       // the selection of entities and the conditions for filtering.
@@ -1696,7 +1716,8 @@ public class Main {
 
       System.out.println("List of BookType entities:");
       // `System.out::println` is the same as typing `System.out.println(...)`
-      // `::` is a method reference in Java, which allows you to refer to a method without executing it.
+      // `::` is a method reference in Java, which allows you to refer to a method
+      // without executing it.
       // It is a shorthand for lambda expressions.
       // In this case, it is used to print each BookType object in the list.
       bookTypes.forEach(System.out::println);
@@ -1714,7 +1735,8 @@ public class Main {
       List<String> bookTypeNames = q2.getResultList();
 
       System.out.println("List of BookType names:");
-      bookTypeNames.forEach(System.out::println);;
+      bookTypeNames.forEach(System.out::println);
+      ;
       System.out.println("");
 
       // --- Get list of BookType names and codes using Criteria API ---
@@ -1722,8 +1744,10 @@ public class Main {
       bookTypeRoot = cq3.from(BookType.class);
 
       // Specify multiple fields to select from the entity.
-      // In this case, it selects both the "name" and "code" fields from the BookType entity.
-      // The `multiselect()` method is used to specify multiple fields to select from the entity.
+      // In this case, it selects both the "name" and "code" fields from the BookType
+      // entity.
+      // The `multiselect()` method is used to specify multiple fields to select from
+      // the entity.
       // It allows you to select multiple fields in a single query, returning
       // an array of objects for each result.
       cq3.multiselect(bookTypeRoot.get("name"), bookTypeRoot.get("code"));
@@ -1735,7 +1759,8 @@ public class Main {
       bookTypeNameandCode.forEach(r -> System.out.println(r[0] + " " + r[1]));
       System.out.println("");
 
-      // --- Get list of Books with price greater than 1000, ordered by price descending using Criteria API ---
+      // --- Get list of Books with price greater than 1000, ordered by price
+      // descending using Criteria API ---
       cq3 = b.createQuery(Object[].class);
       Root<Book> bookRoot = cq3.from(Book.class);
 
@@ -1751,7 +1776,7 @@ public class Main {
       System.out.println("List of Books with price greater than 1000, ordered by price descending:");
       books.forEach(r -> System.out.println(r[0] + " " + r[1] + " " + r[2]));
       System.out.println("");
-      
+
       /*
        * To acheive a dynamic query, we can use the CriteriaBuilder to create
        * a CriteriaQuery object that represents the query structure.
@@ -1780,7 +1805,57 @@ public class Main {
        * https://docs.oracle.com/javaee/7/api/javax/persistence/criteria/
        */
 
-       em.getTransaction().commit();
+      em.getTransaction().commit();
     }
+  }
+
+  private static void useRepository(EntityManagerFactory emf) throws IOException {
+    try (EntityManager em = emf.createEntityManager()) {
+      try (BookRepository bookRepository = new BookRepositoryImpl(em)) {
+
+        // Example usage of the repository
+        Book book = new Book();
+        book.setName("New Book");
+        book.setIsbn("1111-1111-1111");
+        book.setPrice(2500.00);
+        book.setAuthor(em.find(Author.class, 1));
+
+        // Add a new book
+        // This will add a new book to the repository
+        // The book must have a valid author and a unique ISBN.
+        bookRepository.add(book);
+
+        // Remove the book from the repository
+        // This will remove the book from the repository
+        // The book must already exist in the repository for this to work.
+        // If the book does not exist, it will throw an exception.
+        // In this case, we are removing the book we just added.
+        bookRepository.delete(book);
+
+        // Update the book
+        // Assuming we have a book with ID 4, we will update its price
+        // This will update the book with ID 4 to have a new price of 1500.00
+        // The book must already exist in the database for this to work.
+        // If the book does not exist, it will throw an exception.
+        Book result = bookRepository.findBookById(4);
+        result.setPrice(1500.00);
+        bookRepository.update(result);
+
+        // Find a book by ID
+        // This will return a single book with the ID 1
+        Book foundBook = bookRepository.findBookById(1);
+        System.out.println("Found Book: " + foundBook.getName());
+
+        // query a book by title
+        // This will return a single book with the title "Book5"
+        Book bookByTitle = bookRepository.findBookByTitle("Book5");
+        System.out.println("Book by Title: " + bookByTitle.getName());
+
+        // query books by author
+        // This will return a list of books written by the author with the name "Jane"
+        List<Book> booksByAuthor = bookRepository.findBookByAuthor("Jane");
+        booksByAuthor.forEach(b -> System.out.println("Book by Author: " + b.getName()));
+      }
+    } catch(IOException ignored){}
   }
 }
